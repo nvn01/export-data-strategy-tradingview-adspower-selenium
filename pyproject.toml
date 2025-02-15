@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "tradingview-export-data"
+version = "0.1.0"
+description = "Automates TradingView report exports using Selenium and AdsPower"
+authors = ["Novandra Anugrah <156439898+nvn01@users.noreply.github.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12"
+requests = ">=2.32.3,<3.0.0"
+selenium = ">=4.28.1,<5.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+black = "^25.1.0"
+
+[tool.poetry.scripts]
+exporter = "src.main:main"  # Allows running `poetry run exporter`
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
