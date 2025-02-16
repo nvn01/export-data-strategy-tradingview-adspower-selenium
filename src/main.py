@@ -7,6 +7,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 
 # ---------------------------
 # Start AdsPower Browser Session
@@ -35,51 +37,48 @@ driver = webdriver.Chrome(service=service, options=options)
 # ---------------------------
 driver.get("https://www.tradingview.com/chart/WQ0zUSgM/")
 print("Page title:", driver.title)
-time.sleep(5)  # Allow the page to load
+time.sleep(5)  # Allow page to load
 
-# Create a wait instance
-wait = WebDriverWait(driver, 20)
+wait = WebDriverWait(driver, 30)
 
-# Wait for the watchlist container to be present (adjust the selector if necessary)
+# Wait for the watchlist container to appear
 watchlist_container = wait.until(
     EC.presence_of_element_located((By.CSS_SELECTOR, ".watchlist-__KRxuOy"))
 )
 
 # ---------------------------
-# Define a Function to Export Data for Each Coin
+# Function to Export Data for a Coin using Shift+Tab navigation
 # ---------------------------
 def export_data_for_coin(coin_element):
     try:
-        # Scroll coin into view and click it
+        # Scroll coin into view and click it to update the chart.
         driver.execute_script("arguments[0].scrollIntoView(true);", coin_element)
         coin_element.click()
         
-        # Get the coin's symbol (e.g. "BINANCE:BTCUSDT.P")
         symbol = coin_element.get_attribute("data-symbol-full")
         print(f"Processing {symbol}...")
-        time.sleep(2)  # Wait for the chart to update
+        time.sleep(2)  # Wait for chart update
         
-        # Wait for the "Generate report" button to become clickable and click it.
+        # Click the "Generate report" button.
         gen_report_btn = wait.until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//button[.//span[contains(text(),'Generate report')]]")
-            )
+            EC.element_to_be_clickable((By.XPATH, "//button[.//span[contains(text(),'Generate report')]]"))
         )
         gen_report_btn.click()
         print("Clicked 'Generate report'.")
         
-        # Option 2: Wait dynamically until the export button becomes active.
-        # We assume that the export button has a class that includes "ghost-PVWoXu5j"
-        # and while disabled it includes "gray". Wait until "gray" is no longer in the class.
-        export_btn = wait.until(lambda d:
-            d.find_element(By.XPATH, "//button[contains(@class, 'ghost-PVWoXu5j')]")
-            if "gray" not in d.find_element(By.XPATH, "//button[contains(@class, 'ghost-PVWoXu5j')]").get_attribute("class")
-            else None
-        )
-        export_btn.click()
-        print("Clicked 'Export Data'.")
+        # Wait for the report generation process to start.
+        time.sleep(10)
         
-        # Wait a bit for the export process to complete (if necessary)
+        # Now simulate Shift+Tab 5 times to focus the export data button,
+        # then press Enter.
+        actions = ActionChains(driver)
+        for _ in range(5):
+            actions.key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT)
+        actions.send_keys(Keys.ENTER)
+        actions.perform()
+        print("Sent Shift+Tab (x5) then Enter to activate 'Export Data'.")
+        
+        # Wait a bit for any processing/download to complete.
         time.sleep(3)
     
     except Exception as e:
@@ -88,10 +87,9 @@ def export_data_for_coin(coin_element):
 # ---------------------------
 # Loop Through the Watchlist Coins and Export Data
 # ---------------------------
-# Get the list of coin elements. These should have a "data-symbol-full" attribute starting with "BINANCE:"
 coins = driver.find_elements(By.CSS_SELECTOR, "[data-symbol-full^='BINANCE:']")
 
-# Loop over each coin. (Re-fetch the list each iteration to avoid stale element issues.)
+# Loop over each coin (re-fetching the list each iteration to avoid stale element issues).
 for i in range(len(coins)):
     coins = driver.find_elements(By.CSS_SELECTOR, "[data-symbol-full^='BINANCE:']")
     if i >= len(coins):
@@ -100,7 +98,7 @@ for i in range(len(coins)):
     export_data_for_coin(coin)
 
 # ---------------------------
-# Cleanup: Close Browser and Stop AdsPower Session
+# Cleanup
 # ---------------------------
 driver.quit()
 requests.get(close_url)
