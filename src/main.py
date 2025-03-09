@@ -103,13 +103,24 @@ def export_data_for_coin(coin_element):
         wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.reportContainer-NyzFj5yn")))
         print("Report container is visible. Proceeding with export data step.")
         
-        # Simulate Shift+Tab 5 times then press Enter to activate "Export Data".
+        # Simulate Shift+Tab 5 times then press Enter to open the dropdown menu.
         actions = ActionChains(driver)
         for _ in range(5):
             actions.key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT)
         actions.send_keys(Keys.ENTER)
         actions.perform()
-        print("Sent Shift+Tab (x5) then Enter to activate 'Export Data'.")
+        print("Sent Shift+Tab (x5) then Enter to open dropdown menu.")
+        
+        # Wait a moment for the dropdown to appear
+        time.sleep(1)
+        
+        # Navigate to Export Data option (press down arrow twice, then Enter)
+        actions = ActionChains(driver)
+        for _ in range(2):
+            actions.send_keys(Keys.ARROW_DOWN)
+        actions.send_keys(Keys.ENTER)
+        actions.perform()
+        print("Navigated dropdown menu and selected 'Export Data'.")
         
         # Wait a bit for any processing/download to complete.
         time.sleep(3)
